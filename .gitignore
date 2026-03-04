@@ -13,6 +13,14 @@ target/
 *.iml
 *.ipr
 
+# Replace partial .idea rules with:
+.idea/
+
+# Add missing:
+.allure/
+allure-results/
+allure-report/
+
 ### Eclipse ###
 .apt_generated
 .classpath
