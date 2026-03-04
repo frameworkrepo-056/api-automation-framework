@@ -1,11 +1,37 @@
 <configuration>
-    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+
+    <!-- Console appender — for local development -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%d{HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <!-- %thread is critical for parallel test debugging -->
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %-40logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
 
+    <!-- NEW: File appender — persists logs for CI artifact collection -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>target/logs/api-tests.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>target/logs/api-tests.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>7</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Suppress noisy RestAssured internal logging -->
+    <logger name="io.restassured" level="WARN"/>
+    <logger name="org.apache.http" level="WARN"/>
+    <logger name="groovy.json" level="WARN"/>
+
+    <!-- Framework classes at DEBUG — rich detail for our own code -->
+    <logger name="com.company.automation" level="DEBUG"/>
+
+    <!-- Root at INFO -->
     <root level="INFO">
-        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
     </root>
+
 </configuration>

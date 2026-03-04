@@ -1,0 +1,83 @@
+name: API Automation Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      env:
+        description: 'Target environment (qa/staging)'
+        required: false
+        default: 'qa'
+      tags:
+        description: 'Cucumber tag filter (e.g. @severity:critical)'
+        required: false
+        default: 'not @ignore'
+
+jobs:
+  api-tests:
+    runs-on: ubuntu-latest
+    name: Run API Tests (${{ github.event.inputs.env || 'qa' }})
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Update environment.properties for CI
+        run: |
+          ENV=${{ github.event.inputs.env || 'qa' }}
+          sed -i "s/Execution=Local/Execution=CI/" src/test/resources/environment.properties
+          sed -i "s/Environment=QA/Environment=${ENV^^}/" src/test/resources/environment.properties
+          echo "BuildNumber=${{ github.run_number }}" >> src/test/resources/environment.properties
+          echo "Branch=${{ github.ref_name }}" >> src/test/resources/environment.properties
+
+      - name: Run API Tests
+        run: |
+          mvn clean test \
+            -Denv=${{ github.event.inputs.env || 'qa' }} \
+            -Dcucumber.filter.tags="${{ github.event.inputs.tags || 'not @ignore' }}"
+        continue-on-error: true
+
+      - name: Upload Allure Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: allure-results
+          path: target/allure-results
+          retention-days: 30
+
+      - name: Upload Test Logs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-logs
+          path: target/logs/
+          retention-days: 14
+
+      - name: Generate Allure Report
+        uses: simple-elf/allure-report-action@master
+        if: always()
+        with:
+          allure_results: target/allure-results
+          allure_report: target/allure-report
+          allure_history: allure-history
+
+      - name: Deploy Allure Report to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        if: always()
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: target/allure-report
+
+      - name: Fail build if tests failed
+        run: mvn test -Dtest=ApiTestRunner --no-transfer-progress || exit 1
