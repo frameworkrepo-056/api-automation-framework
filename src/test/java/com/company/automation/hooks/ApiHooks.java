@@ -27,7 +27,10 @@ public class ApiHooks {
      */
     @Before(order = 0)
     public void beforeScenario(Scenario scenario) {
-        log.info("▶ START — [{}] {}", scenario.getId(), scenario.getName());
+        log.info("▶ START — [{}] {} | Thread={}",
+                scenario.getId(),
+                scenario.getName(),
+                Thread.currentThread().getName());
         log.debug("Tags: {}", scenario.getSourceTagNames());
         RequestSpecFactory.init();
     }

@@ -215,6 +215,15 @@ public class AllureAttachmentUtil {
         }
     }
 
+    public static void attachAuthToken(String token) {
+        if (token == null || token.isBlank()) return;
+
+        // Mask all but last 4 characters
+        String maskedToken = "****" + token.substring(Math.max(token.length() - 4, 0));
+
+        Allure.addAttachment("🔑 Auth Token", "text/plain", maskedToken);
+    }
+
 
     /**
      * -------------------------------------------------------------------------

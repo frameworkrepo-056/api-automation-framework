@@ -4,38 +4,84 @@ import io.restassured.response.Response;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
- * Per-scenario state container, managed by PicoContainer.
- * PicoContainer creates one fresh instance per scenario — no ThreadLocal needed.
- * All fields are plain instance fields: safe, simple, and testable.
+ * -----------------------------------------------------------------------------
+ * ScenarioContext
+ * -----------------------------------------------------------------------------
  *
- * FIX: Removed broken mixed static/ThreadLocal + instance field design.
- * FIX: Removed duplicate responseTime field (was declared twice).
- * FIX: Removed static methods — everything is now instance-based.
- * FIX: clear() now correctly resets all state for reuse safety.
+ * A per-scenario state container used to share data between step definitions,
+ * hooks, and API client layers.
+ *
+ * Lifecycle:
+ * - Managed automatically by PicoContainer.
+ * - A new instance is created for EVERY Cucumber scenario.
+ *
+ * This design ensures:
+ *
+ * ✔ Thread safety during parallel execution
+ * ✔ Clean isolation between scenarios
+ * ✔ Simple dependency injection into step definitions
+ *
+ * Important Notes:
+ *
+ * - No static variables are used.
+ * - No ThreadLocal is required because PicoContainer handles scoping.
+ * - State is reset using clear() after scenario completion.
+ *
+ * Typical stored data:
+ *
+ * - REST Assured Response
+ * - Response time
+ * - Request metadata
+ * - Request body
+ * - Extracted response values (e.g., id)
+ * - Arbitrary shared test data
+ *
+ * -----------------------------------------------------------------------------
  */
 public class ScenarioContext {
 
+    /**
+     * Unique identifier for the scenario instance.
+     *
+     * Helpful when debugging logs during parallel execution.
+     */
+    private final String scenarioId = UUID.randomUUID().toString();
+
     private Response response;
     private long responseTime;
+
     private String requestMethod;
     private String endpoint;
     private Object requestBody;
+
     private Integer responseId;
 
-
-    public Integer getResponseId() {
-        return responseId;
-    }
-
-    public void setResponseId(Integer responseId) {
-        this.responseId = responseId;
-    }
-    // Generic key-value store for sharing arbitrary data between step definitions
+    /**
+     * Generic storage map used for sharing arbitrary values
+     * between step definitions.
+     *
+     * Example usage:
+     * context.set("userId", 101);
+     * context.get("userId");
+     */
     private final Map<String, Object> context = new HashMap<>();
 
-    // ── Response ──────────────────────────────────────────────────────────────
+
+    // -------------------------------------------------------------------------
+    // Scenario Metadata
+    // -------------------------------------------------------------------------
+
+    public String getScenarioId() {
+        return scenarioId;
+    }
+
+
+    // -------------------------------------------------------------------------
+    // Response Handling
+    // -------------------------------------------------------------------------
 
     public void setResponse(Response response) {
         this.response = response;
@@ -45,7 +91,10 @@ public class ScenarioContext {
         return response;
     }
 
-    // ── Response Time ─────────────────────────────────────────────────────────
+
+    // -------------------------------------------------------------------------
+    // Response Time
+    // -------------------------------------------------------------------------
 
     public void setResponseTime(long responseTime) {
         this.responseTime = responseTime;
@@ -55,7 +104,10 @@ public class ScenarioContext {
         return responseTime;
     }
 
-    // ── Request Metadata ──────────────────────────────────────────────────────
+
+    // -------------------------------------------------------------------------
+    // Request Metadata
+    // -------------------------------------------------------------------------
 
     public void setRequestMethod(String requestMethod) {
         this.requestMethod = requestMethod;
@@ -81,7 +133,27 @@ public class ScenarioContext {
         return requestBody;
     }
 
-    // ── Generic Context Store ─────────────────────────────────────────────────
+
+    // -------------------------------------------------------------------------
+    // Extracted Response Data
+    // -------------------------------------------------------------------------
+
+    /**
+     * Example: extracted ID from response.
+     * Used across steps for validation or follow-up API calls.
+     */
+    public Integer getResponseId() {
+        return responseId;
+    }
+
+    public void setResponseId(Integer responseId) {
+        this.responseId = responseId;
+    }
+
+
+    // -------------------------------------------------------------------------
+    // Generic Context Storage
+    // -------------------------------------------------------------------------
 
     public void set(String key, Object value) {
         context.put(key, value);
@@ -96,11 +168,16 @@ public class ScenarioContext {
         return context.containsKey(key);
     }
 
-    // ── Lifecycle ─────────────────────────────────────────────────────────────
+
+    // -------------------------------------------------------------------------
+    // Lifecycle Management
+    // -------------------------------------------------------------------------
 
     /**
-     * Called from @After hook to reset all state between scenarios.
-     * Critical for long test runs to prevent state bleed.
+     * Clears scenario state.
+     *
+     * Should be called in Cucumber @After hook to prevent
+     * state leakage between scenarios during long executions.
      */
     public void clear() {
         response = null;
