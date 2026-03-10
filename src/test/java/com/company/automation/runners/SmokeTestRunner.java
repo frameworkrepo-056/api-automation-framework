@@ -1,5 +1,6 @@
 package com.company.automation.runners;
 
+import com.company.automation.utils.AllureEnvironmentWriter;
 import org.junit.platform.suite.api.*;
 
 import static io.cucumber.junit.platform.engine.Constants.*;
@@ -15,4 +16,8 @@ import static io.cucumber.junit.platform.engine.Constants.*;
 @ConfigurationParameter(key = PLUGIN_PROPERTY_NAME,  value = "pretty, io.qameta.allure.cucumber7jvm.AllureCucumber7Jvm")
 @ConfigurationParameter(key = FILTER_TAGS_PROPERTY_NAME, value = "@severity:critical and not @ignore")
 public class SmokeTestRunner {
+
+    static {
+        AllureEnvironmentWriter.writeEnvironmentInfo();
+    }
 }

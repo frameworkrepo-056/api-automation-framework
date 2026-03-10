@@ -1,6 +1,7 @@
 package com.company.automation.core.spec;
 
 import com.company.automation.core.config.ConfigReader;
+import com.company.automation.core.logging.ApiLoggingFilter;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.filter.log.LogDetail;
 import io.restassured.http.ContentType;
@@ -18,6 +19,9 @@ public class RequestSpecFactory {
     private static final Logger log = LoggerFactory.getLogger(RequestSpecFactory.class);
     private static final ThreadLocal<RequestSpecification> requestSpec = new ThreadLocal<>();
 
+    private static final ApiLoggingFilter API_LOGGING_FILTER = new ApiLoggingFilter();
+
+
     public static void init() {
         String baseUrl = ConfigReader.getBaseUrl();
         log.info("Initialising RequestSpec — Base URL: {}", baseUrl);
@@ -26,6 +30,7 @@ public class RequestSpecFactory {
                 .setBaseUri(baseUrl)
                 .setContentType(ContentType.JSON)
                 .setAccept(ContentType.JSON)
+                .addFilter(API_LOGGING_FILTER)   // NEW
                 // NEW: Log request details to SLF4J at DEBUG level
                 .log(LogDetail.URI);
 

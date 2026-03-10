@@ -1,10 +1,12 @@
 package com.company.automation.stepdefinitions;
 
 import com.company.automation.context.ScenarioContext;
+import com.company.automation.core.assertions.AssertionFactory;
 import com.company.automation.core.validation.ResponseValidator;
 import com.company.automation.core.validation.SchemaValidator;
 import com.company.automation.services.user.client.UserClient;
 import com.company.automation.services.user.model.UserRequest;
+import com.company.automation.services.user.resource.UserResource;
 import com.company.automation.testdata.user.UserDataFactory;
 import com.company.automation.services.user.model.UserRequest;
 import com.company.automation.services.user.model.UserResponse;
@@ -107,6 +109,43 @@ public class UserSteps {
     public void validateNotEmpty() {
         log.debug("Step: Validate response body not empty");
         ResponseValidator.validateNotEmpty(scenarioContext.getResponse());
+    }
+
+
+    @When("I create a user using resource layer")
+    public void createUserUsingResource() {
+
+        UserResource userResource = new UserResource(scenarioContext);
+
+        UserRequest user = UserDataFactory.createRandomUser();
+
+        UserResponse response = userResource.create(user);
+
+        log.info("User created with id: {}", response.getId());
+    }
+
+    @When("I create a random user using resource")
+    public void createRandomUserUsingResource() {
+
+        log.info("Step: Creating random user using Resource Pattern");
+
+        UserResource userResource = new UserResource(scenarioContext);
+
+        UserRequest user = UserDataFactory.createRandomUser();
+
+        UserResponse response = userResource.create(user);
+
+        log.info("User created with id: {}", response.getId());
+    }
+
+    @Then("the API response should be valid for user creation")
+    public void validateUserCreationResponse() {
+
+        AssertionFactory
+                .apiAssert(scenarioContext)
+                .status(201)
+                .responseTimeBelow(3000)
+                .notEmpty();
     }
 
 

@@ -3,6 +3,8 @@ package com.company.automation.hooks;
 import com.company.automation.context.ScenarioContext;
 import com.company.automation.core.reporting.AllureAttachmentUtil;
 import com.company.automation.core.spec.RequestSpecFactory;
+import com.company.automation.utils.AllureEnvironmentWriter;
+import com.company.automation.utils.JsonUtil;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
@@ -30,6 +32,10 @@ public class ApiHooks {
         RequestSpecFactory.init();
     }
 
+//    @Before(order = 1)
+//    public void attachEnvironment() {
+//        AllureEnvironmentWriter.writeEnvironmentInfo();
+//    }
     /**
      * FIX: Call scenarioContext.clear() to prevent state bleed between scenarios.
      * FIX: Call RequestSpecFactory.clear() to clean up ThreadLocal memory.
@@ -38,36 +44,60 @@ public class ApiHooks {
      */
     @After(order = 0)
     public void afterScenario(Scenario scenario) {
-        // NEW: Attach failure-specific Allure attachment for failed scenarios
+
+        // ------------------------------------------------------------------
+        // Attach failure context in Allure for failed scenarios
+        // ------------------------------------------------------------------
         if (scenario.isFailed() && scenarioContext.getResponse() != null) {
+
             log.warn("✗ FAILED — {}", scenario.getName());
+
+            // Attach failure details including response body and metadata
             AllureAttachmentUtil.attachFailureContext(
                     scenario.getName(),
                     scenarioContext.getResponse()
             );
+
         } else {
             log.info("✔ PASSED — {}", scenario.getName());
         }
 
-        // Log API trace at DEBUG level (visible when -Dlogback.configurationFile or level=DEBUG)
+        // ------------------------------------------------------------------
+        // DEBUG: Print full API trace for troubleshooting
+        // Visible only when log level = DEBUG
+        // ------------------------------------------------------------------
         if (scenarioContext.getResponse() != null) {
+
             log.debug("===== API TRACE =====");
-            log.debug("Method  : {}", scenarioContext.getRequestMethod());
-            log.debug("Endpoint: {}", scenarioContext.getEndpoint());
+
+            log.debug("Method   : {}", scenarioContext.getRequestMethod());
+            log.debug("Endpoint : {}", scenarioContext.getEndpoint());
+
             if (scenarioContext.getRequestBody() != null) {
-                log.debug("Body    : {}", scenarioContext.getRequestBody());
+                log.debug("Body     : {}", JsonUtil.toJson(scenarioContext.getRequestBody()));
             }
-            log.debug("Status  : {}", scenarioContext.getResponse().getStatusCode());
-            log.debug("Time    : {} ms", scenarioContext.getResponseTime());
+
+            log.debug("Status   : {}", scenarioContext.getResponse().getStatusCode());
+            log.debug("Time     : {} ms", scenarioContext.getResponseTime());
+
             log.debug("=====================");
         }
 
-        // FIX: Clear context to prevent state bleed between scenarios
+        // ------------------------------------------------------------------
+        // IMPORTANT: Clear scenario context to prevent data bleed
+        // between test scenarios
+        // ------------------------------------------------------------------
         scenarioContext.clear();
 
-        // FIX: Remove ThreadLocal from RequestSpecFactory to prevent memory leak
+        // ------------------------------------------------------------------
+        // Clear ThreadLocal request specification
+        // Prevents memory leaks when running parallel tests
+        // ------------------------------------------------------------------
         RequestSpecFactory.clear();
 
+        // ------------------------------------------------------------------
+        // Final scenario log
+        // ------------------------------------------------------------------
         log.info("◀ END — {}", scenario.getName());
     }
 }

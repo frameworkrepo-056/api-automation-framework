@@ -9,6 +9,8 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import io.restassured.response.Response;
+import org.junit.jupiter.api.Assertions;
 
 /**
  * Reusable response assertion utility.
@@ -78,5 +80,17 @@ public class ResponseValidator {
         assertThat(actual)
                 .as("Header '%s' mismatch", headerName)
                 .containsIgnoringCase(expectedValue);
+    }
+
+    public static void validateResponseNotEmpty(Response response) {
+
+        Assertions.assertNotNull(response, "Response must not be null");
+
+        String body = response.getBody().asString();
+
+        Assertions.assertFalse(
+                body == null || body.trim().isEmpty(),
+                "Response body must not be empty"
+        );
     }
 }

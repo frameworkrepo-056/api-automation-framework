@@ -67,4 +67,8 @@ public class ConfigReader {
     public static String getEnv() {
         return get("env");
     }
+
+    public static String getEnvironment() {
+        return System.getProperty("env", "qa");
+    }
 }
