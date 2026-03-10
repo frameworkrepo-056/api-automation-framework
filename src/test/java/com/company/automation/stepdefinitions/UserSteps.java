@@ -4,9 +4,15 @@ import com.company.automation.context.ScenarioContext;
 import com.company.automation.core.validation.ResponseValidator;
 import com.company.automation.core.validation.SchemaValidator;
 import com.company.automation.services.user.client.UserClient;
+import com.company.automation.services.user.model.UserRequest;
+import com.company.automation.testdata.user.UserDataFactory;
+import com.company.automation.services.user.model.UserRequest;
+import com.company.automation.services.user.model.UserResponse;
+import com.company.automation.testdata.user.UserDataFactory;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 import io.qameta.allure.Allure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +47,21 @@ public class UserSteps {
         log.info("Step: Calling GET /users");
         var response = userClient.getUsers();
         Allure.addAttachment("Response Time", response.getTime() + " ms");
+    }
+
+
+    @Given("I create a random user")
+    public void createRandomUser() {
+
+        log.info("Step: Creating random user");
+
+        UserRequest user = UserDataFactory.createRandomUser();
+
+        var response = userClient.createUser(user);
+
+        scenarioContext.setResponse(response);
+
+        Allure.addAttachment("Create User Response Time", response.getTime() + " ms");
     }
 
     // ── Then ──────────────────────────────────────────────────────────────────
@@ -87,4 +108,6 @@ public class UserSteps {
         log.debug("Step: Validate response body not empty");
         ResponseValidator.validateNotEmpty(scenarioContext.getResponse());
     }
+
+
 }

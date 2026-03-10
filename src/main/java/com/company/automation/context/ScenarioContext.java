@@ -22,7 +22,16 @@ public class ScenarioContext {
     private String requestMethod;
     private String endpoint;
     private Object requestBody;
+    private Integer responseId;
 
+
+    public Integer getResponseId() {
+        return responseId;
+    }
+
+    public void setResponseId(Integer responseId) {
+        this.responseId = responseId;
+    }
     // Generic key-value store for sharing arbitrary data between step definitions
     private final Map<String, Object> context = new HashMap<>();
 
@@ -99,6 +108,7 @@ public class ScenarioContext {
         requestMethod = null;
         endpoint = null;
         requestBody = null;
+        responseId = null;
         context.clear();
     }
 }

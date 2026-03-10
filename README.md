@@ -65,7 +65,7 @@ src/
 │   └── stepdefinitions/UserSteps.java  # BDD step glue
 └── resources/
 ├── allure.properties               # Allure output config
-├── config/config.properties        # Environment URLs and settings
+├── config/config.propert   ies        # Environment URLs and settings
 ├── environment.properties          # Allure dashboard env panel
 ├── features/user/                  # Gherkin feature files
 ├── logback.xml                     # Logging configuration

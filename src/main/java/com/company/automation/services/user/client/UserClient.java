@@ -6,6 +6,7 @@ import com.company.automation.services.user.endpoints.UserEndpoints;
 import io.restassured.response.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.company.automation.services.user.model.UserResponse;
 
 /**
  * API client for all User service operations.
@@ -57,6 +58,18 @@ public class UserClient extends BaseApiClient {
         scenarioContext.setResponse(response);
         scenarioContext.setResponseTime(response.getTime());
         return response;
+    }
+
+    /**
+     * Typed response version of createUser
+     */
+    public UserResponse createUserTyped(Object requestBody) {
+
+        log.info("Creating user (typed response)");
+
+        Response response = createUser(requestBody);
+
+        return response.as(UserResponse.class);
     }
 
     /** PUT /users/{id} — NEW */
